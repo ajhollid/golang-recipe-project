@@ -1,0 +1,28 @@
+{{define "nav-component"}}
+    <nav class="flex flex-col items-end bg-teal-500 md:pr-6">
+        <img id="nav-button" src="/static/img/recipe.png" class="md:hidden h-20">
+        <ul id="nav-drawer"
+            class="h-full bg-teal-500
+            transition-transform -translate-x-full
+            md:relative md:translate-x-0
+            absolute top-0 left-0
+            w-full flex flex-col just md:flex-row md:justify-end gap-2">
+            <li class="transition duration-500 ease-in-out w-full md:w-auto text-center flex items-center h-12 pl-2 pr-2 hover:bg-orange-500">
+                <a class="w-full" href="/">Home</a></li>
+            {{if eq .IsAuthenticated 0}}
+                <li class="transition duration-500 ease-in-out w-full md:w-auto text-center flex items-center h-12 pl-2 pr-2 hover:bg-orange-500">
+                    <a class="w-full" href="/user/signup">Signup</a>
+                </li>
+            {{end}}
+            {{if eq .IsAuthenticated 0}}
+                <li class="transition duration-500 ease-in-out w-full md:w-auto text-center flex items-center h-12 pl-2 pr-2 hover:bg-orange-500">
+                    <a class="w-full" href="/user/login">Login</a>
+                </li>
+            {{else}}
+                <li class="transition duration-500 ease-in-out w-full md:w-auto text-center flex items-center h-12 pl-2 pr-2 hover:bg-orange-500">
+                    <a class="w-full" href="/user/logout">Logout</a>
+                </li>
+            {{end}}
+        </ul>
+    </nav>
+{{end}}

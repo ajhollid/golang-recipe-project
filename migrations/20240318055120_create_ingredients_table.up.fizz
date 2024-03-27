@@ -1,0 +1,7 @@
+create_table("ingredients"){
+  t.Column("id", "integer",{primary:true})
+  t.Column("name", "string", {})
+  t.Column("unit", "string", {})
+  t.Column("amount", "string", {})
+  t.Column("recipe_id", "integer", {})
+}

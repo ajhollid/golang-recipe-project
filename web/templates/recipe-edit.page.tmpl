@@ -1,0 +1,346 @@
+{{template "base" .}}
+
+{{define "content"}}
+    {{$recipe := index .Data "recipe"}}
+    {{$recipeJson := index .Data "recipeJson"}}
+
+
+    <div id="root" data-recipe="{{$recipeJson}}" class="mt-4 card">
+        <h4>Basic Info</h4>
+        <div class="flex p-2">
+            <label class="std-label" for="title">Title</label>
+            <input class="std-input" id="title" type="text" value="{{$recipe.Title}}">
+        </div>
+    </div>
+    <div class="mt-4 p-2 card">
+        <h4 class="">Ingredients</h4>
+        <div class="divider"></div>
+        {{range $recipe.Ingredients}}
+            <div class="flex flex-col" id="ingredient-{{.ID}}">
+                <div class="flex pt-2 pb-2">
+                    <input class="std-input-rounded text-center min-w-12" id="amount-{{.ID}}" value="{{.Amount}}"
+                           pattern="^\d+(\.\d+)?(\/\d+)?$"/>
+                    &nbsp;
+                    <input class="std-input-rounded min-w-12" id="unit-{{.ID}}" value="{{.Unit}}"/>
+                    &nbsp;
+                    <input class="std-input-rounded min-w-12" id="name-{{.ID}}" value="{{.Name}}">
+                </div>
+                <button class="w-24 std-button" id="delete-ingredient-{{.ID}}">Delete me</button>
+            </div>
+        {{end}}
+        <div id="ingredients-root"></div>
+
+        <button id="add-ingredient" class="std-button mt-4 w-48">Add Ingredient</button>
+
+    </div>
+
+    <div class="mt-4 p-2 card">
+        <h4 class="">Directions</h4>
+        <div class="divider"></div>
+        {{range $index, $direction := $recipe.Directions}}
+            <div class="flex flex-col" id="direction-{{$direction.ID}}">
+                <textarea class="p-2 border border-blue-800 rounded-md mt-2" name="direction"
+                          id="direction-content-{{$direction.ID}}"
+                          rows="5">{{$direction.Direction}}</textarea>
+                <button class="mt-2 w-24 std-button" id="delete-dir-{{$direction.ID}}">Delete me</button>
+            </div>
+        {{end}}
+        <div id="directions-root"></div>
+        <button id="add-direction" class="std-button mt-4 w-48">Add Direction</button>
+
+    </div>
+    <div class="p-2 justify-center flex gap-2">
+        <button id="submit-recipe" class="w-24 std-button">Submit</button>
+        <button id="delete-recipe" class="w-24 std-button bg-red-300 border-red-800">Delete</button>
+
+    </div>
+{{end}}
+
+{{ define "js"}}
+    <script src="https://cdn.jsdelivr.net/npm/mathjs@12.4.1/lib/browser/math.min.js"></script>
+    <script>
+        let jsonRecipe = document.getElementById("root").dataset.recipe
+        let recipe = JSON.parse(jsonRecipe)
+
+        // Validates a field with a given validator function and sets an error border
+        const validateField = (validator, prefix, item) => {
+            let el = document.getElementById(`${prefix}-${item.ID}`)
+            if (!validator(el.value)) {
+                el.classList.add("border-red-800")
+                return 1
+            } else {
+                el.classList.remove("border-red-800")
+                return 0
+            }
+        }
+
+        const validRecipe = (recipe) => {
+
+            if (recipe.Title.length <= 0) {
+                return false
+            }
+
+            if (recipe.Ingredients.length <= 0) {
+                return false
+            }
+
+            // Loop over ingredients and see if they are all valid.  If one is invalid, recipe is invalid
+            let invalidIngredients = 0
+            recipe.Ingredients.forEach((ingredient) => {
+                invalidIngredients += validateField(has, "amount", ingredient)
+                invalidIngredients += validateField(validAmount, "amount", ingredient)
+                invalidIngredients += validateField(has, "unit", ingredient)
+                invalidIngredients += validateField(has, "name", ingredient)
+            })
+            if (invalidIngredients > 0) {
+                return false
+            }
+
+            if (recipe.Directions.length <= 0) {
+                return false
+            }
+
+            // Loop over directions and make sure they are valid
+            let invalidDirections = 0
+            recipe.Directions.forEach((direction) => {
+                invalidDirections += validateField(has, "direction-content", direction)
+            })
+
+
+            if (invalidDirections > 0) {
+                return false
+            }
+
+            return true
+        }
+
+
+        recipe.Ingredients.forEach((ingredient) => {
+
+            // Handle edit title
+            document.getElementById("title")
+                .addEventListener("input", (event) => {
+                    recipe.Title = event.target.value
+                })
+
+            // Handle edit amount
+            document.getElementById(`amount-${ingredient.ID}`)
+                .addEventListener("input", (event) => {
+                    //Only allow for decimals and fractions
+                    const pattern = new RegExp("^\\d*(\\.\\d*)?(\\/\\d*)?$");
+                    if (!pattern.test(event.target.value)) {
+                        event.target.value = event.target.value.slice(0, -1);
+                    }
+                    ingredient.Amount = event.target.value
+                })
+
+            // Handle edit unit
+            document.getElementById(`unit-${ingredient.ID}`)
+                .addEventListener("input", (event) => {
+                    ingredient.Unit = event.target.value
+                })
+
+            // Handle edit name
+            document.getElementById(`name-${ingredient.ID}`)
+                .addEventListener("input", (event) => {
+                    ingredient.Name = event.target.value
+                })
+
+            // Handle delete
+            document.getElementById(`delete-ingredient-${ingredient.ID}`)
+                .addEventListener("click", () => {
+                    recipe.Ingredients = recipe.Ingredients.filter((testIngredient) => {
+                        return testIngredient.ID !== ingredient.ID
+                    })
+                    document.getElementById(`ingredient-${ingredient.ID}`).remove()
+                })
+        })
+
+
+        recipe.Directions.forEach((direction) => {
+            document.getElementById(`direction-content-${direction.ID}`)
+                .addEventListener("input", (event) => {
+                    direction.Direction = event.target.value
+                })
+
+            document.getElementById(`delete-dir-${direction.ID}`)
+                .addEventListener("click", () => {
+                    recipe.Directions = recipe.Directions.filter((testDirection) => {
+                        return testDirection.ID !== direction.ID
+                    })
+                    document.getElementById(`direction-${direction.ID}`).remove()
+                })
+        })
+
+        document.getElementById("add-ingredient")
+            .addEventListener("click", () => {
+
+                let newIngredientId;
+                if (recipe.Ingredients.length > 0) {
+                    newIngredientId = recipe.Ingredients[recipe.Ingredients.length - 1].ID + 1
+                } else {
+                    newIngredientId = 0;
+                }
+
+                recipe.Ingredients.push({
+                    ID: newIngredientId,
+                })
+                const ingredientsRoot = document.getElementById("ingredients-root")
+                let newIngredient = document.createElement("div")
+                newIngredient.className = "flex flex-col"
+                newIngredient.id = `ingredient-${newIngredientId}`
+
+                let innerCard = document.createElement("div")
+                innerCard.className = "flex pt-2 pb-2"
+                newIngredient.appendChild(innerCard)
+
+                let newAmount = document.createElement("input")
+                newAmount.className = "std-input-rounded text-center min-w-12"
+                newAmount.placeholder = "amount"
+                newAmount.id = `amount-${newIngredientId}`
+                innerCard.appendChild(newAmount)
+                innerCard.appendChild(document.createTextNode("\u00A0"))
+                newAmount.addEventListener("input", (event) => {
+                    //Only allow for decimals and fractions
+                    const pattern = new RegExp("^\\d*(\\.\\d*)?(\\/\\d*)?$");
+                    if (!pattern.test(event.target.value)) {
+                        event.target.value = event.target.value.slice(0, -1);
+                    }
+
+                    let item = recipe.Ingredients.find(ingredient => ingredient.ID === newIngredientId)
+                    item.Amount = event.target.value
+                })
+
+                let newUnit = document.createElement("input")
+                newUnit.className = "std-input-rounded text-center min-w-12"
+                newUnit.id = `unit-${newIngredientId}`
+                newUnit.placeholder = "unit"
+                newUnit.addEventListener("input", (event) => {
+                    let item = recipe.Ingredients.find(ingredient => ingredient.ID === newIngredientId)
+                    item.Unit = event.target.value
+                })
+
+                innerCard.appendChild(newUnit)
+                innerCard.appendChild(document.createTextNode("\u00A0"))
+
+
+                let newName = document.createElement("input")
+                newName.className = "std-input-rounded text-center min-w-12"
+                newName.placeholder = "name"
+                newName.id = `name-${newIngredientId}`
+                innerCard.appendChild(newName)
+                newName.addEventListener("input", (event) => {
+                    let item = recipe.Ingredients.find(ingredient => ingredient.ID === newIngredientId)
+                    item.Name = event.target.value
+                })
+
+                let newDelete = document.createElement("button")
+                newDelete.className = "w-24 std-button"
+                newDelete.innerText = "Delete me"
+                newDelete.addEventListener("click", () => {
+                    recipe.Ingredients = recipe.Ingredients.filter((testIngredient) => {
+                        return testIngredient.ID !== newIngredientId
+                    })
+                    document.getElementById(`ingredient-${newIngredientId}`).remove()
+                })
+                newIngredient.appendChild(newDelete)
+                ingredientsRoot.appendChild(newIngredient)
+            })
+
+        document.getElementById("add-direction")
+            .addEventListener("click", () => {
+
+                let newDirectionId;
+                if (recipe.Directions.length > 0) {
+                    newDirectionId = recipe.Directions[recipe.Directions.length - 1].ID + 1
+                } else {
+                    newDirectionId = 0;
+                }
+                recipe.Directions.push({
+                    ID: newDirectionId,
+                })
+
+                const directionsRoot = document.getElementById("directions-root")
+
+                const newDirection = document.createElement("div")
+                newDirection.className = "flex flex-col"
+                newDirection.id = `direction-${newDirectionId}`
+
+                let newTextArea = document.createElement("textarea")
+                newTextArea.className = "p-2 border border-blue-800 rounded-md mt-2"
+                newTextArea.rows = 5
+                newTextArea.id = `direction-content-${newDirectionId}`
+                newTextArea.addEventListener("input", (event) => {
+                    let item = recipe.Directions.find(direction => direction.ID === newDirectionId)
+                    item.Direction = event.target.value
+                })
+
+                let newDeleteButton = document.createElement("button")
+                newDeleteButton.className = "mt-2 w-24 std-button"
+                newDeleteButton.innerText = "Delete me"
+                newDeleteButton.addEventListener("click", () => {
+                    recipe.Directions = recipe.Directions.filter((testDirection) => {
+                        return testDirection.ID !== newDirectionId
+                    })
+                    document.getElementById(`direction-${newDirectionId}`).remove()
+                })
+
+                newDirection.appendChild(newTextArea)
+                newDirection.appendChild(newDeleteButton)
+
+                directionsRoot.appendChild(newDirection)
+
+            })
+
+        document.getElementById("submit-recipe")
+            .addEventListener("click", () => {
+                if (validRecipe(recipe)) {
+                    fetch(`/recipe/edit/${recipe.ID}`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(recipe)
+                    }).then((res) => {
+                        console.log(res)
+                    }).catch((err) => {
+                        console.log(err)
+                    })
+                } else {
+                    console.log("Invalid")
+                }
+            })
+
+        document.getElementById("delete-recipe")
+            .addEventListener("click", () => {
+                swal.fire({
+                    title: "Are you sure?",
+                    showCancelButton: true,
+                    confirmButtonText: "Delete",
+                    confirmButtonColor: "#FCA27A",
+                    cancelButtonColor: "#93C5FD",
+                    customClass: {
+                        confirmButton: "std-button",
+                        cancelButton: "std-button"
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch(`/recipe/delete/${recipe.ID}`, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                        }).then((res) => {
+                            console.log(res)
+                            if(res.redirected === true){
+                                window.location.href = res.url
+                            }
+                        }).catch((err) => {
+                            console.log(err)
+                        })
+                    }
+
+                })
+            })
+    </script>
+{{end}}

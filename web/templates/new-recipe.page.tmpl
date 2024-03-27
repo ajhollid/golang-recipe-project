@@ -1,0 +1,225 @@
+{{template "base" .}}
+
+{{define "content"}}
+    <div class="mt-4 card">
+        <h4>Basic Info</h4>
+        <div class="flex p-2">
+            <label class="std-label" for="title">Title</label>
+            <input class="std-input" type="text" id="title" name="title">
+        </div>
+    </div>
+    <div class="mt-4 p-2 card">
+        <h4 class="">Ingredients</h4>
+        <div class="divider"></div>
+        <div id="ingredient-list"></div>
+        <div class="flex">
+            <label class="std-label" for="amount">Amount</label>
+            <input class="std-input" type="text" id="amount" name="amount">
+        </div>
+        <div class="flex pt-2">
+            <label class="std-label" for="unit">Units</label>
+            <input class="std-input" type="text" id="unit" name="unit">
+        </div>
+        <div class="flex pt-2">
+            <label class="std-label" for="name">Name</label>
+            <input class="std-input" type="text" id="name" name="name">
+        </div>
+        <button id="add-ingredient" class="std-button mt-4 w-48">Add Ingredient</button>
+    </div>
+
+    <div class="mt-4 p-2 card">
+        <h4 class="">Directions</h4>
+        <div class="divider"></div>
+        <div id="direction-list"></div>
+        <div class="flex flex-col">
+            <label class="std-label border rounded-md" for="direction">Direction</label>
+            <textarea class="p-2 border border-blue-800 rounded-md mt-2" name="direction" id="direction" cols="30"
+                      rows="5"></textarea>
+        </div>
+        <button id="add-direction" class="std-button mt-4 w-48">Add Direction</button>
+    </div>
+    <div class="flex justify-center">
+        <button id="submit-recipe" class="std-button w-48">Submit New Recipe</button>
+    </div>
+{{end}}
+
+{{define "js"}}
+    <script>
+        // Vars
+        let recipe = {};
+        let title = "";
+        let ingredients = [];
+        let directions = [];
+
+        // Functions
+        const createIngredient = (id, amount, unit, name) => {
+            // Main Div
+            let el = document.createElement("div")
+            el.className = "flex flex-col"
+            el.id = `${id}`
+            el.textContent = `${amount} ${unit} ${name}`
+
+            //Button
+            let btn = document.createElement("button")
+            btn.className = "std-button w-24"
+            btn.textContent = "Delete me"
+            btn.addEventListener("click", () => {
+                ingredients = ingredients.filter((ingredient) => {
+                    return ingredient.id !== id
+                })
+                el.parentNode.removeChild(el)
+            })
+            el.appendChild(btn)
+
+
+            let divider = document.createElement("div")
+            divider.className = ("divider")
+            el.appendChild(divider)
+
+            return el;
+        }
+
+        const handleAddIngredient = () => {
+            // Get name and validate
+            let iName = document.getElementById("name")
+            if (!has(iName.value)) {
+                alert("invalid name")
+                return
+            }
+
+            // Get amount and validate
+            let iAmount = document.getElementById("amount")
+            if (!validAmount(iAmount.value)) {
+                alert("Invalid amount")
+                return
+            }
+
+            // Get unit and validate
+            let iUnit = document.getElementById("unit")
+            if (!has(iUnit.value)) {
+                alert("Invalid unit")
+                return
+            }
+
+            let ingredient = {
+                id: Date.now(),
+                name: iName.value,
+                amount: iAmount.value,
+                unit: iUnit.value,
+            }
+
+
+            iName.value = ""
+            iAmount.value = ""
+            iUnit.value = ""
+
+            ingredients.push(ingredient)
+
+            document.getElementById("ingredient-list")
+                .appendChild(
+                    createIngredient(ingredient.id, ingredient.amount, ingredient.unit, ingredient.name)
+                )
+        }
+
+        const createDirection = (id, direction) => {
+            let el = document.createElement("div")
+            el.className = "flex flex-col"
+            el.id = `${id}`
+            el.textContent = direction
+
+            //Button
+            let btn = document.createElement("button")
+            btn.className = "std-button w-24"
+            btn.textContent = "Delete me"
+            btn.addEventListener("click", () => {
+                directions = directions.filter((direction) => {
+                    return direction.id !== id
+                })
+                el.parentNode.removeChild(el)
+            })
+            el.appendChild(btn)
+
+
+            let divider = document.createElement("div")
+            divider.className = ("divider")
+            el.appendChild(divider)
+
+            return el;
+        }
+
+        const handleAddDirection = () => {
+            let directionEl = document.getElementById("direction")
+            if (!has(directionEl.value)) {
+                alert("BAD")
+                return
+            }
+
+
+            let direction = {
+                id: Date.now(),
+                direction: directionEl.value
+            }
+
+            directions.push(direction)
+            directionEl.value=""
+            document.getElementById("direction-list")
+                .appendChild(
+                    createDirection(direction.id, direction.direction)
+                )
+        }
+
+
+        const validRecipe = (recipe) => {
+            if (recipe.title.length <= 0) {
+                return false
+            }
+
+            if (ingredients.length <= 0) {
+                return false
+            }
+
+            if (directions.length <= 0) {
+                return false
+            }
+            return true
+        }
+
+        const handleSubmit = () => {
+            title = document.getElementById("title").value
+            recipe = {
+                title,
+                ingredients,
+                directions,
+            }
+            if (!validRecipe(recipe)) {
+                alert("BAD RECIPE")
+                return
+            }
+            console.log(recipe)
+            fetch("/recipe/new", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(recipe)
+            }).then((res) => {
+                if(res.redirected === true){
+                    window.location.href = res.url
+                }
+            }).catch((err)=> {
+                console.log(err)
+            })
+        }
+
+
+        // Logic
+        let addIngredient = document.getElementById("add-ingredient")
+        addIngredient.addEventListener("click", handleAddIngredient)
+
+        document.getElementById("add-direction")
+            .addEventListener("click", handleAddDirection)
+
+        document.getElementById("submit-recipe")
+            .addEventListener("click", handleSubmit)
+    </script>
+{{end}}

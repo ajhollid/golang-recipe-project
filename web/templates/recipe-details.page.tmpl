@@ -1,0 +1,91 @@
+{{template "base" .}}
+
+{{define "content"}}
+    {{$recipe := index .Data "recipe"}}
+    {{$recipeJson := index .Data "recipeJson"}}
+
+
+    <div id="root" data-recipe="{{$recipeJson}}" class="mt-4 card">
+        <h4>Basic Info</h4>
+        <div class="flex p-2">
+            <label class="std-label" for="title">Title</label>
+            <input class="std-input" id="title" type="text" value="{{$recipe.Title}}" disabled>
+        </div>
+    </div>
+    <div class="mt-4 p-2 card">
+        <h4 class="">Ingredients</h4>
+        <div class="divider"></div>
+        {{range $recipe.Ingredients}}
+            <div class="flex p-2">
+                <span class="text-center min-w-12" id="amount-{{.ID}}">{{.Amount}}</span>
+                <span class="min-w-12">&nbsp;{{.Unit}}</span>
+                <span class="min-w-12">&nbsp;{{.Name}}</span>
+                <div class="flex flex-grow justify-end">
+                    <input id="{{.ID}}" type="number" class="w-12 border border-blue-800 rounded-md">
+                </div>
+            </div>
+        {{end}}
+    </div>
+
+    <div class="mt-4 p-2 card">
+        <h4 class="">Directions</h4>
+        <div class="divider"></div>
+        {{range $index, $direction := $recipe.Directions}}
+            <div class="flex p-2">
+                <span>{{add $index 1}}:</span>
+                <span>&nbsp;{{$direction.Direction}}</span>
+            </div>
+        {{end}}
+    </div>
+    {{with .IsAuthor}}
+        <div class="flex justify-center p-2">
+            <a href="/recipe/edit/{{$recipe.ID}}">
+            <button class="std-button">Edit Recipe</button>
+            </a>
+        </div>
+    {{end}}
+{{end}}
+
+{{ define "js"}}
+    <script src="https://cdn.jsdelivr.net/npm/mathjs@12.4.1/lib/browser/math.min.js"></script>
+    <script>
+        let jsonRecipe = document.getElementById("root").dataset.recipe
+        let recipe = JSON.parse(jsonRecipe)
+        let {Ingredients} = recipe
+        // Handles recipe proportions
+        const handleProportions = (event, ingredient) => {
+            const {Amount, ID} = ingredient;
+
+            // Grab new value from the input that was changed
+            let newValue = event.target.value;
+            if (newValue === "") {
+                newValue = 0
+            }
+
+            // Calculate the ratio
+            let frac = math.fraction(Amount)
+            const origValue = frac.n / frac.d
+            const ratio = newValue / origValue
+
+            // Loop over all ingredients, update all those that are not
+            // the one that is being set
+            Ingredients.forEach((item) => {
+                const {Amount: testAmount, ID: testId} = item;
+                const target = document.getElementById(`amount-${testId}`)
+                if (testId !== ID) {
+                    document.getElementById(`${testId}`).value = ""
+                    const testFrac = math.fraction(testAmount)
+                    target.innerText = (ratio * (testFrac.n / testFrac.d)).toString()
+                } else {
+                    target.innerText = newValue
+                }
+            })
+        }
+
+        //Loop over the ingredients and set listeners
+        recipe.Ingredients.forEach((ingredient) => {
+            let field = document.getElementById(`${ingredient.ID}`)
+            field.addEventListener("input", (event) => handleProportions(event, ingredient))
+        })
+    </script>
+{{end}}

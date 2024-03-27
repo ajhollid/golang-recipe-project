@@ -1,0 +1,1 @@
+drop_foreign_key("ingredients", "ingredients_recipes_id_fk")

@@ -1,0 +1,6 @@
+create_table("recipes"){
+  t.Column("id", "integer",{primary:true})
+  t.Column("title", "string", {"default": ""})
+  t.Column("image", "blob", {})
+  t.Column("user_id", "integer", {})
+}
