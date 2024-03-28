@@ -2,7 +2,6 @@ package dbrepo
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/popnfresh234/recipe-app-golang/internal/models"
@@ -29,9 +28,7 @@ func (dbRepo *mysqlDBRepo) GetAllRecipes() ([]models.Recipe, error) {
 	for rows.Next() {
 		var id, userId int
 		var createdAt, updatedAt []byte
-		var title string
-		var image sql.RawBytes
-		var imageBytes []byte
+		var title, image string
 
 		err = rows.Scan(
 			&id, &image, &title, &createdAt, &updatedAt, &userId,
@@ -40,10 +37,6 @@ func (dbRepo *mysqlDBRepo) GetAllRecipes() ([]models.Recipe, error) {
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
-		}
-
-		if image != nil {
-			imageBytes = []byte(image)
 		}
 
 		parsedCreated, err := time.Parse("2006-01-02 15:04:05", string(createdAt))
@@ -58,7 +51,7 @@ func (dbRepo *mysqlDBRepo) GetAllRecipes() ([]models.Recipe, error) {
 		}
 		recipe := models.Recipe{
 			ID:        id,
-			Image:     &imageBytes,
+			Image:     image,
 			Title:     title,
 			CreatedAt: parsedCreated,
 			UpdatedAt: parsedUpdated,
@@ -98,7 +91,7 @@ func (dbRepo *mysqlDBRepo) GetRecipeDetails(recipeId int) (models.Recipe, error)
 
 	recipeStatement := `
 		SELECT
-			id, title, user_id
+			id, title, image, user_id
 		FROM
 		    recipes
 		WHERE
@@ -107,7 +100,7 @@ func (dbRepo *mysqlDBRepo) GetRecipeDetails(recipeId int) (models.Recipe, error)
 	var recipe models.Recipe
 
 	recipeRow := dbRepo.DB.QueryRowContext(ctx, recipeStatement, recipeId)
-	err := recipeRow.Scan(&recipe.ID, &recipe.Title, &recipe.UserId)
+	err := recipeRow.Scan(&recipe.ID, &recipe.Title, &recipe.Image, &recipe.UserId)
 	if err != nil {
 		fmt.Println(err)
 		return recipe, err
@@ -181,7 +174,7 @@ func (dbRepo *mysqlDBRepo) GetRecipeDetails(recipeId int) (models.Recipe, error)
 	return recipe, nil
 }
 
-func (dbRepo *mysqlDBRepo) InsertRecipe(title string, userId int) (int64, error) {
+func (dbRepo *mysqlDBRepo) InsertRecipe(title string, image string, userId int) (int64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -189,7 +182,7 @@ func (dbRepo *mysqlDBRepo) InsertRecipe(title string, userId int) (int64, error)
 		`INSERT INTO recipes (title,image,user_id, created_at, updated_at)
  		VALUES (?,?,?,?,?)
 		`
-	res, err := dbRepo.DB.ExecContext(ctx, statement, title, "", userId, time.Now(), time.Now())
+	res, err := dbRepo.DB.ExecContext(ctx, statement, title, image, userId, time.Now(), time.Now())
 	if err != nil {
 		log.Println("Error inserting user", err)
 		return -1, err
@@ -248,7 +241,7 @@ func (dbRepo *mysqlDBRepo) GetUserByEmail(email, password string) (models.User, 
 
 	err := row.Scan(&user.ID, &user.Name, &user.Image, &user.Email, &user.Password, &createdAt, &updatedAt)
 	if err != nil {
-		log.Println("Error fetching newly created user", err)
+		log.Println("Error scanning", err)
 		return models.User{}, err
 	}
 
@@ -324,8 +317,8 @@ func (dbRepo *mysqlDBRepo) UpdateRecipe(jsonRecipe models.JsonRecipe) (models.Re
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	statement := `UPDATE recipes SET title = ?, updated_at = ? WHERE id = ?`
-	_, err := dbRepo.DB.ExecContext(ctx, statement, jsonRecipe.Title, time.Now(), jsonRecipe.ID)
+	statement := `UPDATE recipes SET title = ?, image=?, updated_at = ? WHERE id = ?`
+	_, err := dbRepo.DB.ExecContext(ctx, statement, jsonRecipe.Title, jsonRecipe.Image, time.Now(), jsonRecipe.ID)
 	if err != nil {
 		return models.Recipe{}, err
 	}

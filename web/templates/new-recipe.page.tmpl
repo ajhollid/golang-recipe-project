@@ -9,6 +9,15 @@
         </div>
     </div>
     <div class="mt-4 p-2 card">
+        <div class="p-2 flex justify-center">
+            <img class="w-1/2 max-w-full" id="recipe-image" src="/static/img/placeholder.png" alt="recipe-image">
+        </div>
+        <form class="flex flex-col" id="upload-form">
+            <input class="mt-2 std-input-rounded" type="file" id="image-upload" accept="image/*">
+            <button class="mt-2 w-48 std-button" type="submit">Upload</button>
+        </form>
+    </div>
+    <div class="mt-4 p-2 card">
         <h4 class="">Ingredients</h4>
         <div class="divider"></div>
         <div id="ingredient-list"></div>
@@ -50,6 +59,7 @@
         let title = "";
         let ingredients = [];
         let directions = [];
+        let image = ""
 
         // Functions
         const createIngredient = (id, amount, unit, name) => {
@@ -161,7 +171,7 @@
             }
 
             directions.push(direction)
-            directionEl.value=""
+            directionEl.value = ""
             document.getElementById("direction-list")
                 .appendChild(
                     createDirection(direction.id, direction.direction)
@@ -190,12 +200,12 @@
                 title,
                 ingredients,
                 directions,
+                image,
             }
             if (!validRecipe(recipe)) {
                 alert("BAD RECIPE")
                 return
             }
-            console.log(recipe)
             fetch("/recipe/new", {
                 method: "POST",
                 headers: {
@@ -203,10 +213,10 @@
                 },
                 body: JSON.stringify(recipe)
             }).then((res) => {
-                if(res.redirected === true){
+                if (res.redirected === true) {
                     window.location.href = res.url
                 }
-            }).catch((err)=> {
+            }).catch((err) => {
                 console.log(err)
             })
         }
@@ -221,5 +231,21 @@
 
         document.getElementById("submit-recipe")
             .addEventListener("click", handleSubmit)
+
+        //Handle Images
+        document.getElementById('upload-form').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const fileInput = document.getElementById('image-upload');
+            const file = fileInput.files[0];
+            resizeImage(file, IMAGE_SIZE, IMAGE_SIZE, function(resizedImage) {
+                // resizedImage is the base64 string of the resized image
+                image = resizedImage
+                let img = document.getElementById("recipe-image")
+                img.src=`data:image/png;base64,${image}`;
+            });
+
+
+
+        });
     </script>
 {{end}}

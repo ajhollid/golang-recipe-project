@@ -12,6 +12,9 @@
             <input class="std-input" id="title" type="text" value="{{$recipe.Title}}" disabled>
         </div>
     </div>
+    <div class="p-2 flex justify-center">
+        <img class="w-1/2 max-w-full" id="recipe-image" src="/static/img/placeholder.png" alt="recipe-image">
+    </div>
     <div class="mt-4 p-2 card">
         <h4 class="">Ingredients</h4>
         <div class="divider"></div>
@@ -40,7 +43,7 @@
     {{with .IsAuthor}}
         <div class="flex justify-center p-2">
             <a href="/recipe/edit/{{$recipe.ID}}">
-            <button class="std-button">Edit Recipe</button>
+                <button class="std-button">Edit Recipe</button>
             </a>
         </div>
     {{end}}
@@ -51,6 +54,9 @@
     <script>
         let jsonRecipe = document.getElementById("root").dataset.recipe
         let recipe = JSON.parse(jsonRecipe)
+        if (recipe.Image !== "") {
+            document.getElementById("recipe-image").src = `data:image/png;base64,${recipe.Image}`;
+        }
         let {Ingredients} = recipe
         // Handles recipe proportions
         const handleProportions = (event, ingredient) => {

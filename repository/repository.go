@@ -9,7 +9,7 @@ type DatabaseRepo interface {
 
 	GetRecipeDetails(recipeId int) (models.Recipe, error)
 
-	InsertRecipe(title string, userId int) (int64, error)
+	InsertRecipe(title string, image string, userId int) (int64, error)
 
 	InsertIngredient(name, amount, unit string, recipeId int64) error
 

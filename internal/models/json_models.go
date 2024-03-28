@@ -17,4 +17,5 @@ type JsonRecipe struct {
 	Title       string           `json:"title"`
 	Ingredients []JsonIngredient `json:"ingredients"`
 	Directions  []JsonDirection  `json:"directions"`
+	Image       string           `json:"image"`
 }

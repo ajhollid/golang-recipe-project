@@ -6,7 +6,6 @@ import (
 	"github.com/popnfresh234/recipe-app-golang/internal/config"
 	"github.com/popnfresh234/recipe-app-golang/internal/driver"
 	"github.com/popnfresh234/recipe-app-golang/internal/forms"
-	"github.com/popnfresh234/recipe-app-golang/internal/helpers"
 	"github.com/popnfresh234/recipe-app-golang/internal/models"
 	"github.com/popnfresh234/recipe-app-golang/internal/renderer"
 	"github.com/popnfresh234/recipe-app-golang/repository"
@@ -140,9 +139,13 @@ func (repo *Repository) PostEditRecipe(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 		// TODO handle Error
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
-	dbRecipe, err := repo.DB.UpdateRecipe(updatedRecipe)
-	fmt.Println(helpers.GetGson(dbRecipe))
+	_, err = repo.DB.UpdateRecipe(updatedRecipe)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
 	// Insert ingredients
 	for _, ingredient := range updatedRecipe.Ingredients {
@@ -161,6 +164,8 @@ func (repo *Repository) PostEditRecipe(w http.ResponseWriter, r *http.Request) {
 			fmt.Println(err)
 		}
 	}
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 // Login is the login handler
@@ -196,7 +201,8 @@ func (repo *Repository) PostLogin(w http.ResponseWriter, r *http.Request) {
 	user, err = repo.DB.GetUserByEmail(user.Email, user.Password)
 	if err != nil {
 		repo.App.Session.Put(r.Context(), "error", "Error signing in")
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
 	}
 
 	repo.App.Session.Put(r.Context(), "user", user)
@@ -276,7 +282,7 @@ func (repo *Repository) PostNewRecipe(w http.ResponseWriter, r *http.Request) {
 	// TODO Create and Insert Recipe, get ID
 	user := repo.App.Session.Get(r.Context(), "user").(models.User)
 	fmt.Println(user.ID)
-	recipeId, err := repo.DB.InsertRecipe(newRecipe.Title, user.ID)
+	recipeId, err := repo.DB.InsertRecipe(newRecipe.Title, newRecipe.Image, user.ID)
 	if err != nil {
 		fmt.Println(err)
 		return

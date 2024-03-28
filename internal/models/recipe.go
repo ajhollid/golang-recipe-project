@@ -4,7 +4,7 @@ import "time"
 
 type Recipe struct {
 	ID          int
-	Image       *[]byte
+	Image       string
 	Title       string
 	UserId      int
 	UpdatedAt   time.Time
