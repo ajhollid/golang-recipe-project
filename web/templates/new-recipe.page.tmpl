@@ -291,10 +291,9 @@
             resizeImage(file, IMAGE_SIZE, IMAGE_SIZE, function (resizedImage) {
                 // resizedImage is the base64 string of the resized image
                 image = resizedImage
-                let img = document.getElementById("recipe-image")
+                let img = document.getElementById("recipe image")
                 img.src = `data:image/png;base64,${image}`;
             });
-
         });
     </script>
 {{end}}
