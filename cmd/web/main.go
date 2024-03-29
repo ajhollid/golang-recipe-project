@@ -13,6 +13,7 @@ import (
 	"github.com/popnfresh234/recipe-app-golang/internal/renderer"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -22,7 +23,12 @@ var session *scs.SessionManager
 const portNumber = ":3400"
 
 func main() {
-	run()
+	dbHost := os.Getenv("DB_HOST")
+	if dbHost == "" {
+		dbHost = "localhost:3306"
+	}
+	fmt.Println("DB HOST:", dbHost)
+	run(dbHost)
 
 	src := &http.Server{
 		Addr:    portNumber,
@@ -38,7 +44,7 @@ func main() {
 
 }
 
-func run() {
+func run(dbHost string) {
 
 	//Register models for session
 	gob.Register(models.User{})
@@ -60,7 +66,7 @@ func run() {
 		User:   "admin",
 		Passwd: "password",
 		Net:    "tcp",
-		Addr:   "localhost:3306",
+		Addr:   dbHost,
 		DBName: "recipe_go_db",
 	}
 	db, err := driver.ConnectSQL(dbCfg.FormatDSN())
