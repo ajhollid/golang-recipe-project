@@ -1,7 +1,7 @@
 {{template "base" .}}
 {{define "content"}}
     {{if eq .IsAuthenticated 0}}
-        <div class="flex justify-center items-center gap-4">
+        <div class="flex flex-col md:flex-row items-center justify-center gap-4">
             <a class="w-24 mt-2 mb-2" href="/user/login">
                 <button class="std-button w-24">Log In!</button>
             </a>
@@ -9,7 +9,6 @@
             <a class="w-24 mt-2 mb-2" href="/user/signup">
                 <button class="std-button w-24">Sign Up!</button>
             </a>
-
         </div>
     {{else}}
         <div class="flex flex-col items-center">
@@ -23,13 +22,13 @@
             </div>
         </div>
     {{end}}
-    {{range index .Data "recipes"}}
-        <a href="/recipe/details/{{.ID}}">
-            <div class="card">
-                <p class="text-lg font-bold">{{.Title}}</p>
-                <p class="text-xs">Created by: {{ .User.Name}}</p>
-                <p class="text-xs">Last updates: {{formatTime .UpdatedAt "2006-02-01"}}</p>
-            </div>
-        </a>
-    {{end}}
+        {{range index .Data "recipes"}}
+            <a href="/recipe/details/{{.ID}}">
+                <div class="card">
+                    <p class="text-lg font-bold">{{.Title}}</p>
+                    <p class="text-xs">Created by: {{ .User.Name}}</p>
+                    <p class="text-xs">Last updates: {{formatTime .UpdatedAt "2006-02-01"}}</p>
+                </div>
+            </a>
+        {{end}}
 {{end}}

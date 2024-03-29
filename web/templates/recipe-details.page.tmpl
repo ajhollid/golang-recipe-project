@@ -3,8 +3,6 @@
 {{define "content"}}
     {{$recipe := index .Data "recipe"}}
     {{$recipeJson := index .Data "recipeJson"}}
-
-
     <div id="root" data-recipe="{{$recipeJson}}" class="mt-4 card">
         <h4>Basic Info</h4>
         <div class="flex p-2">

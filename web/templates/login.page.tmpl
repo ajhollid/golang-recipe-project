@@ -1,7 +1,7 @@
 {{template "base" .}}
 
 {{define "content"}}
-    <div class="xl:w-1/2 bg-slate-200 mx-auto p-4">
+    <div class="mx-auto p-4">
         <h1 class="mt-2 mb-2">Login</h1>
         {{$user := index .Data "user"}}
         <form method="POST" action="/user/login">
