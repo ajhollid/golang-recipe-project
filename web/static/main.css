@@ -613,12 +613,24 @@ video {
   position: absolute;
 }
 
+.relative {
+  position: relative;
+}
+
 .left-0 {
   left: 0px;
 }
 
 .top-0 {
   top: 0px;
+}
+
+.bottom-0 {
+  bottom: 0px;
+}
+
+.float-left {
+  float: left;
 }
 
 .mx-auto {
@@ -640,6 +652,22 @@ video {
 
 .mt-6 {
   margin-top: 1.5rem;
+}
+
+.mr-10 {
+  margin-right: 2.5rem;
+}
+
+.mr-48 {
+  margin-right: 12rem;
+}
+
+.mr-24 {
+  margin-right: 6rem;
+}
+
+.mr-36 {
+  margin-right: 9rem;
 }
 
 .block {
@@ -787,6 +815,10 @@ video {
   padding-top: 0.5rem;
 }
 
+.pl-16 {
+  padding-left: 4rem;
+}
+
 .text-center {
   text-align: center;
 }
@@ -854,6 +886,11 @@ video {
 
 .ease-in-out {
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.before\:content-\[\'Hello_World\'\]::before {
+  --tw-content: 'Hello World';
+  content: var(--tw-content);
 }
 
 .hover\:bg-orange-500:hover {
