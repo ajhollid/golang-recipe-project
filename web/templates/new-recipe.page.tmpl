@@ -62,6 +62,17 @@
         let image = ""
 
         // Functions
+
+        const addError = (el) => {
+            el.classList.add("border-red-800")
+            el.classList.add("bg-red-300")
+        }
+
+        const removeError = (el) => {
+            el.classList.remove("border-red-800")
+            el.classList.remove("bg-red-300")
+        }
+
         const createIngredient = (id, amount, unit, name) => {
             // Main Div
             let el = document.createElement("div")
@@ -90,35 +101,55 @@
         }
 
         const handleAddIngredient = () => {
+            let ingredient = {
+                errors: {
+                    name: false,
+                    amount: false,
+                    unit: false,
+                }
+            }
+
+
             // Get name and validate
             let iName = document.getElementById("name")
             if (!has(iName.value)) {
-                alert("invalid name")
-                return
+                addError(iName)
+                ingredient.errors.name = true;
+            } else {
+                removeError(iName)
+                ingredient.errors.name = false
             }
 
             // Get amount and validate
             let iAmount = document.getElementById("amount")
             if (!validAmount(iAmount.value)) {
-                alert("Invalid amount")
-                return
+                addError(iAmount)
+                ingredient.errors.amount = true
+            } else {
+                ingredient.errors.amount = false
+                removeError(iAmount)
             }
 
             // Get unit and validate
             let iUnit = document.getElementById("unit")
             if (!has(iUnit.value)) {
-                alert("Invalid unit")
+                addError(iUnit)
+                ingredient.errors.unit = true;
+            } else {
+                removeError(iUnit);
+                ingredient.errors.unit = false;
+            }
+
+            if (ingredient.errors.name || ingredient.errors.amount || ingredient.errors.unit) {
                 return
             }
 
-            let ingredient = {
-                id: Date.now(),
-                name: iName.value,
-                amount: iAmount.value,
-                unit: iUnit.value,
-            }
+            ingredient.id = Date.now();
+            ingredient.name = iName.value;
+            ingredient.amount = iAmount.value;
+            ingredient.unit = iUnit.value;
 
-
+            // Reset fields
             iName.value = ""
             iAmount.value = ""
             iUnit.value = ""
@@ -158,17 +189,24 @@
         }
 
         const handleAddDirection = () => {
+            let direction = {errors: {direction: false}}
+
             let directionEl = document.getElementById("direction")
             if (!has(directionEl.value)) {
-                alert("BAD")
+                addError(directionEl)
+                direction.errors.direction = true;
+            } else {
+                removeError(directionEl)
+                direction.errors.direction = false
+            }
+
+            if(direction.errors.direction){
                 return
             }
 
+            direction.id = Date.now()
+            direction.direction = directionEl.value
 
-            let direction = {
-                id: Date.now(),
-                direction: directionEl.value
-            }
 
             directions.push(direction)
             directionEl.value = ""
@@ -180,11 +218,16 @@
 
 
         const validRecipe = (recipe) => {
+            let titleEl = document.getElementById("title")
             if (recipe.title.length <= 0) {
+                addError(titleEl)
                 return false
+            }else {
+                removeError(titleEl)
             }
 
             if (ingredients.length <= 0) {
+                notify("error", "Please add an ingredient")
                 return false
             }
 
@@ -203,7 +246,6 @@
                 image,
             }
             if (!validRecipe(recipe)) {
-                alert("BAD RECIPE")
                 return
             }
             fetch("/recipe/new", {
@@ -232,19 +274,26 @@
         document.getElementById("submit-recipe")
             .addEventListener("click", handleSubmit)
 
+        // Restrict amount input
+        document.getElementById("amount")
+            .addEventListener("input", (event) => {
+                //Only allow for decimals and fractions
+                const pattern = new RegExp("^\\d*(\\.\\d*)?(\\/\\d*)?$");
+                if (!pattern.test(event.target.value)) {
+                    event.target.value = event.target.value.slice(0, -1);
+                }
+            })
         //Handle Images
         document.getElementById('upload-form').addEventListener('submit', function (event) {
             event.preventDefault();
             const fileInput = document.getElementById('image-upload');
             const file = fileInput.files[0];
-            resizeImage(file, IMAGE_SIZE, IMAGE_SIZE, function(resizedImage) {
+            resizeImage(file, IMAGE_SIZE, IMAGE_SIZE, function (resizedImage) {
                 // resizedImage is the base64 string of the resized image
                 image = resizedImage
                 let img = document.getElementById("recipe-image")
-                img.src=`data:image/png;base64,${image}`;
+                img.src = `data:image/png;base64,${image}`;
             });
-
-
 
         });
     </script>

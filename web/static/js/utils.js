@@ -34,3 +34,11 @@ const resizeImage = (file, maxWidth, maxHeight, callback) => {
     };
     reader.readAsDataURL(file);
 }
+
+
+notify = (msgType, msg) => {
+    notie.alert({
+        type: msgType,
+        text: msg,
+    })
+}

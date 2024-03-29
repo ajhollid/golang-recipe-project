@@ -234,6 +234,7 @@ func (repo *Repository) PostSignup(w http.ResponseWriter, r *http.Request) {
 
 	form := forms.New(r.PostForm)
 	form.Required("name", "email", "password")
+	form.MinLength("password", 6)
 	form.IsEmail("email")
 
 	if !form.Valid() {
