@@ -18,11 +18,11 @@
         <div class="divider"></div>
         {{range $recipe.Ingredients}}
             <div class="flex p-2">
-                <span class="text-center min-w-12" id="amount-{{.ID}}">{{.Amount}}</span>
-                <span class="min-w-12">&nbsp;{{.Unit}}</span>
-                <span class="min-w-12">&nbsp;{{.Name}}</span>
+                <p class="flex items-center text-center min-w-12" id="amount-{{.ID}}">{{.Amount}}</p>
+                <p class="flex items-center min-w-12">&nbsp;{{.Unit}}</p>
+                <p class="flex items-center min-w-12">&nbsp;{{.Name}}</p>
                 <div class="flex flex-grow justify-end">
-                    <input id="{{.ID}}" type="number" class="w-12 border border-blue-800 rounded-md">
+                    <input id="{{.ID}}" type="text" class="p-1 w-16 border border-blue-800 rounded-md">
                 </div>
             </div>
         {{end}}
@@ -66,9 +66,12 @@
                 newValue = 0
             }
 
+            let fraction = math.fraction(newValue)
+            newValue = fraction.n / fraction.d
+
             // Calculate the ratio
-            let frac = math.fraction(Amount)
-            const origValue = frac.n / frac.d
+            let referenceFraction = math.fraction(Amount)
+            const origValue = referenceFraction.n / referenceFraction.d
             const ratio = newValue / origValue
 
             // Loop over all ingredients, update all those that are not
@@ -88,8 +91,14 @@
 
         //Loop over the ingredients and set listeners
         recipe.Ingredients.forEach((ingredient) => {
-            let field = document.getElementById(`${ingredient.ID}`)
-            field.addEventListener("input", (event) => handleProportions(event, ingredient))
+            let targetField = document.getElementById(`${ingredient.ID}`)
+            targetField.addEventListener("input", (event) => {
+                const pattern = new RegExp("^\\d*(\\.\\d*)?(\\/\\d*)?$");
+                if (!pattern.test(event.target.value)) {
+                    event.target.value = event.target.value.slice(0, -1);
+                }
+                handleProportions(event, ingredient)
+            })
         })
     </script>
 {{end}}

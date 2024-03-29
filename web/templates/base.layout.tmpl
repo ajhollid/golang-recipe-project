@@ -22,14 +22,6 @@
 
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/notie/dist/notie.min.css">
     <script>
-        notify = (msgType, msg) => {
-            notie.alert({
-                type: msgType,
-                text: msg,
-            })
-        }
-    </script>
-    <script>
         {{with .Error}}
         notify("error", {{.}})
         {{end}}
